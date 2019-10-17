@@ -22,6 +22,4 @@ public class FolderEntityDTO {
 
     private boolean isActive;
     private Set<FolderEntityDTO> child;
-
-
 }

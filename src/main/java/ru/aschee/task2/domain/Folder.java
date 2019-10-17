@@ -1,19 +1,25 @@
 package ru.aschee.task2.domain;
 
-import lombok.NonNull;
+import org.springframework.validation.annotation.Validated;
 
 import javax.persistence.*;
-import java.util.HashSet;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
-
+@Validated
 public class FolderEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @NonNull
+
+
+    @NotNull
+    @NotBlank
     private String nameFolder;
 
     @JoinColumn(name = "parent_id")
@@ -22,13 +28,20 @@ public class FolderEntity {
 
     private boolean isActive;
 
-    @OneToMany(mappedBy = "parent", cascade = {CascadeType.REFRESH,CascadeType.REMOVE,CascadeType.MERGE,CascadeType.DETACH}, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "parent",
+            cascade =
+                    {CascadeType.REFRESH,
+                            CascadeType.REMOVE,
+                            CascadeType.MERGE,
+                            CascadeType.DETACH},
+            fetch = FetchType.LAZY)
     private Set<FolderEntity> child;
 
     public FolderEntity() {
     }
 
-    public FolderEntity(@NonNull String nameFolder, FolderEntity parent, boolean isActive) {
+    public FolderEntity(
+            @NotNull @NotBlank String nameFolder, FolderEntity parent, boolean isActive) {
         this.nameFolder = nameFolder;
         this.parent = parent;
         this.isActive = isActive;
@@ -74,4 +87,18 @@ public class FolderEntity {
         isActive = active;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        FolderEntity that = (FolderEntity) o;
+        return isActive == that.isActive &&
+                Objects.equals(id, that.id) &&
+                nameFolder.equals(that.nameFolder);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, nameFolder, parent, isActive, child);
+    }
 }

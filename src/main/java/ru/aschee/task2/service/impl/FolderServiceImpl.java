@@ -1,6 +1,6 @@
 package ru.aschee.task2.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import ru.aschee.task2.DTO.FolderEntityDTO;
@@ -14,28 +14,29 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+@Log4j2
 @EnableTransactionManagement
 @Service
 public class FolderEntityServiceImpl implements FolderEntityService {
+
     private final FolderEntityRepository folderEntityRepository;
+    private final FolderMapper folderMapper;
 
-    @Autowired
-    FolderMapper folderMapper;
-
-    public FolderEntityServiceImpl(FolderEntityRepository folderEntityRepository) {
+    public FolderEntityServiceImpl(FolderEntityRepository folderEntityRepository, FolderMapper folderMapper) {
         this.folderEntityRepository = folderEntityRepository;
+        this.folderMapper = folderMapper;
     }
 
     @Transactional
     @Override
     public FolderEntityDTO addFolder(Long id, String name) {
-        return folderMapper.convertEntityToDTO(folderEntityRepository.save(new FolderEntity(name, folderEntityRepository.findById(id).orElseThrow(), false)));
+        return folderMapper.convertEntityToDTO(folderEntityRepository.save(new FolderEntity(name, folderEntityRepository.findById(id).orElse(null), false)));
     }
 
     @Transactional
     @Override
     public Optional<FolderEntityDTO> get(Long id) {
-        return Optional.of(folderMapper.convertEntityToDTO(folderEntityRepository.findById(id). orElseThrow()));
+        return Optional.of(folderMapper.convertEntityToDTO(folderEntityRepository.findById(id).orElseThrow()));
     }
 
     @Override
@@ -44,6 +45,7 @@ public class FolderEntityServiceImpl implements FolderEntityService {
         Optional<FolderEntity> selectFolder = folderEntityRepository.findById(id);
         selectFolder.ifPresent(folderEntity -> folderEntity.setNameFolder(name));
         folderEntityRepository.save(selectFolder.orElseThrow());
+        log.info("name folder was change");
     }
 
     @Transactional
@@ -55,6 +57,7 @@ public class FolderEntityServiceImpl implements FolderEntityService {
                 folderEntityRepository.deleteAllByParent(folder.get());
             }
             folderEntityRepository.delete(folder.get());
+            log.info("folders with id :{} were removed", id);
         }
     }
 
@@ -66,6 +69,7 @@ public class FolderEntityServiceImpl implements FolderEntityService {
         copy.setParent(folderEntityRepository.findById(targetId).orElseThrow());
         FolderEntity saveCopy = folderEntityRepository.save(copy);
         FolderEntity set = settingParent(saveCopy);
+        log.info("folders were copy");
         return folderMapper.convertEntityToDTO(folderEntityRepository.save(set));
     }
 
